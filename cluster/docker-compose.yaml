@@ -1,32 +1,32 @@
 version: '3'
 services:
-  # setup:
-  #   image: elasticsearch:${STACK_VERSION}
-  #   container_name: setup
-  #   volumes:
-  #     - ./setup.sh:/setup.sh
-  #   environment:
-  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-  #     - KIBANA_PASSWORD=${KIBANA_PASSWORD}
-  #   user: "0"
-  #   command: >
-  #     bash /setup.sh
-
-  es01:
-    # depends_on: 
-    #   - setup
+  setup-cluster:
     image: elasticsearch:${STACK_VERSION}
-    container_name: es01
+    container_name: setup-cluster
+    volumes:
+      - ./setup-cluster.sh:/setup-cluster.sh
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+    user: "0"
+    command: >
+      bash /setup-cluster.sh
+
+  es-cluster-01:
+    depends_on: 
+      - setup-cluster
+    image: elasticsearch:${STACK_VERSION}
+    container_name: es-cluster-01
     volumes:
       - ./data/esdata01:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
       - 9300:9300
     environment:
-      - node.name=es01
+      - node.name=es-cluster-01
       - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01,es02,es03
-      - discovery.seed_hosts=es02,es03
+      - cluster.initial_master_nodes=es-cluster-01,es-cluster-02,es-cluster-03
+      - discovery.seed_hosts=es-cluster-02,es-cluster-03
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - bootstrap.memory_lock=true
       # - xpack.license.self_generated.type=${LICENSE}
@@ -41,11 +41,11 @@ services:
       timeout: 10s
       retries: 5
 
-  es02:
+  es-cluster-02:
     image: elasticsearch:${STACK_VERSION}
-    container_name: es02
+    container_name: es-cluster-02
     depends_on:
-      - es01
+      - es-cluster-01
     volumes:
       # - ./certs:/usr/share/elasticsearch/config/certs
       - ./data/esdata02:/usr/share/elasticsearch/data
@@ -53,10 +53,10 @@ services:
       - '9202:9200'
       - '9302:9300'
     environment:
-      - node.name=es02
+      - node.name=es-cluster-02
       - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01,es02,es03
-      - discovery.seed_hosts=es01,es03
+      - cluster.initial_master_nodes=es-cluster-01,es-cluster-02,es-cluster-03
+      - discovery.seed_hosts=es-cluster-01,es-cluster-03
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - bootstrap.memory_lock=true
       # - xpack.license.self_generated.type=${LICENSE}
@@ -72,21 +72,21 @@ services:
       retries: 5
 
 
-  es03:
+  es-cluster-03:
     image: elasticsearch:${STACK_VERSION}
-    container_name: es03
+    container_name: es-cluster-03
     depends_on:
-      - es01
+      - es-cluster-01
     volumes:  
       - ./data/esdata03:/usr/share/elasticsearch/data
     ports:
       - '9203:9200'
       - '9303:9300'
     environment:
-      - node.name=es03
+      - node.name=es-cluster-03
       - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01,es02,es03
-      - discovery.seed_hosts=es01,es02
+      - cluster.initial_master_nodes=es-cluster-01,es-cluster-02,es-cluster-03
+      - discovery.seed_hosts=es-cluster-01,es-cluster-02
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - bootstrap.memory_lock=true
       # - xpack.license.self_generated.type=${LICENSE}
@@ -103,16 +103,16 @@ services:
 
 
         
-  kibana:
+  kibana-cluster:
     depends_on:
-      es01:
+      es-cluster-01:
         condition: service_healthy
-      es02:
+      es-cluster-02:
         condition: service_healthy
-      es03:
+      es-cluster-03:
         condition: service_healthy
     image: kibana:${STACK_VERSION}
-    container_name: kibana
+    container_name: kibana-cluster
     ports:
         - ${KIBANA_PORT}:5601
     volumes:
@@ -120,7 +120,7 @@ services:
 
     environment:
       - SERVERNAME=kibana
-      - ELASTICSEARCH_HOSTS=http://es01:9200
+      - ELASTICSEARCH_HOSTS=http://es-cluster-01:9200
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
     mem_limit: ${MEM_LIMIT}
