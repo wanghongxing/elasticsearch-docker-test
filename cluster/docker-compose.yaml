@@ -39,7 +39,11 @@ services:
       test: curl -u elastic:${ELASTIC_PASSWORD} -s -f localhost:9200/_cat/health >/dev/null || exit 1
       interval: 30s
       timeout: 10s
+<<<<<<< HEAD
       retries: 120
+=======
+      retries: 20
+>>>>>>> 3340de70352ec31059ec94c7ae3e6ce9d202d5e5
 
   es-cluster-02:
     image: elasticsearch:${STACK_VERSION}
@@ -69,7 +73,11 @@ services:
       test: curl -u elastic:${ELASTIC_PASSWORD} -s -f localhost:9200/_cat/health >/dev/null || exit 1
       interval: 30s
       timeout: 10s
+<<<<<<< HEAD
       retries: 120
+=======
+      retries: 20
+>>>>>>> 3340de70352ec31059ec94c7ae3e6ce9d202d5e5
 
 
   es-cluster-03:
@@ -129,7 +137,11 @@ services:
       test: curl -u elastic:${ELASTIC_PASSWORD} -s -f localhost:9200/_cat/health >/dev/null || exit 1
       interval: 30s
       timeout: 10s
+<<<<<<< HEAD
       retries: 120
+=======
+      retries: 20
+>>>>>>> 3340de70352ec31059ec94c7ae3e6ce9d202d5e5
 
 
         
