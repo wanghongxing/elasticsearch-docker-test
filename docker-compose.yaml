@@ -1,0 +1,39 @@
+version: '3'
+services:
+  es-single:
+    image: elasticsearch:${STACK_VERSION}
+    container_name: es-single
+    volumes:
+      - ./data/esdata01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - node.name=es-single
+      - cluster.name=es-docker-cluster
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=true
+    mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+        
+  kibana-single:
+    depends_on:
+      - es-single
+    image: kibana:${STACK_VERSION}
+    container_name: kibana-single
+    ports:
+        - ${KIBANA_PORT}:5601
+    volumes:
+      - ./data/kibanadata:/usr/share/kibana/data
+
+    environment:
+      - SERVERNAME=kibana-single
+      - ELASTICSEARCH_HOSTS=http://es-single:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+    mem_limit: ${MEM_LIMIT}
